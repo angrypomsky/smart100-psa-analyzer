@@ -298,24 +298,24 @@ class SBLOCAAnalyzer(BaseAnalyzer):
 print('✓ 셀 3 완료: SBLOCAAnalyzer 로드됨')
 print('\n✅ 모든 클래스 로드 완료. 아래 셀에서 분석을 시작하세요.')
 
-# ============================================================
-# 셀 4: LOFW 분석 실행
-# ============================================================
+if __name__ == '__main__':
+    print('\n어떤 사고 유형을 분석할까요?')
+    print('  1. LOFW')
+    print('  2. SBLOCA')
+    choice = input('선택 (1 or 2): ').strip()
 
-analyzer = LOFWAnalyzer()
-analyzer.step1_load_mapping()
-analyzer.step2_upload_files()
-df_lofw = analyzer.show_results()
-print(df_lofw)
-analyzer.save_results('lofw_results.csv')
+    if choice == '1':
+        analyzer = LOFWAnalyzer()
+        result_file = 'lofw_results.csv'
+    elif choice == '2':
+        analyzer = SBLOCAAnalyzer()
+        result_file = 'sbloca_results.csv'
+    else:
+        print('❌ 잘못된 입력입니다. 1 또는 2를 입력하세요.')
+        exit()
 
-# ============================================================
-# 셀 5: SBLOCA 분석 실행
-# ============================================================
-
-analyzer = SBLOCAAnalyzer()
-analyzer.step1_load_mapping()
-analyzer.step2_upload_files()
-df_sbloca = analyzer.show_results()
-print(df_sbloca)
-analyzer.save_results('sbloca_results.csv')
+    analyzer.step1_load_mapping()
+    analyzer.step2_upload_files()
+    df = analyzer.show_results()
+    print(df)
+    analyzer.save_results(result_file)

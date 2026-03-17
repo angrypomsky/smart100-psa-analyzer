@@ -25,8 +25,23 @@ Original file is located at
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from google.colab import files
-import io
+import tkinter as tk
+from tkinter import filedialog
+
+
+def _pick_files(title, multiple=True):
+    """tkinter GUI로 파일 선택 → 경로 리스트 반환"""
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)
+    ftypes = [('Excel files', '*.xlsx *.xls'), ('All files', '*.*')]
+    if multiple:
+        paths = filedialog.askopenfilenames(title=title, filetypes=ftypes)
+    else:
+        p = filedialog.askopenfilename(title=title, filetypes=ftypes)
+        paths = [p] if p else []
+    root.destroy()
+    return list(paths)
 
 
 class BaseAnalyzer:
@@ -58,13 +73,13 @@ class BaseAnalyzer:
         print('Step 1: 변수 매핑 파일 업로드')
         print(f'{"="*70}')
         print('📂 smart100데이터_변수명_확인.xlsx 파일을 선택하세요.\n')
-        uploaded = files.upload()
-        if not uploaded:
-            print('❌ 파일이 업로드되지 않았습니다.')
+        paths = _pick_files('변수 매핑 파일 선택', multiple=False)
+        if not paths:
+            print('❌ 파일이 선택되지 않았습니다.')
             return
-        filename = list(uploaded.keys())[0]
-        self.var_mapping_df = pd.read_excel(io.BytesIO(uploaded[filename]))
-        print(f'✓ 변수 매핑 로드: {filename} ({len(self.var_mapping_df)}개 변수)')
+        filepath = paths[0]
+        self.var_mapping_df = pd.read_excel(filepath)
+        print(f'✓ 변수 매핑 로드: {Path(filepath).name} ({len(self.var_mapping_df)}개 변수)')
         print('\n▶ 다음: analyzer.step2_upload_files()')
 
     def step2_upload_files(self):
@@ -75,16 +90,17 @@ class BaseAnalyzer:
         print(f'Step 2: {self.ACCIDENT_TYPE} 시나리오 파일 업로드')
         print(f'{"="*70}')
         print('📂 시나리오 파일들을 선택하세요 (여러 개 선택 가능)\n')
-        uploaded = files.upload()
-        if not uploaded:
-            print('❌ 파일이 업로드되지 않았습니다.')
+        paths = _pick_files('시나리오 파일 선택 (여러 개 가능)')
+        if not paths:
+            print('❌ 파일이 선택되지 않았습니다.')
             return
-        print(f'\n✓ {len(uploaded)}개 파일 업로드 완료')
+        print(f'\n✓ {len(paths)}개 파일 선택 완료')
         print('-' * 70)
-        for filename, content in uploaded.items():
+        for filepath in paths:
+            filename = Path(filepath).name
             print(f'📊 {filename}...', end=' ')
             try:
-                df_raw = pd.read_excel(io.BytesIO(content))
+                df_raw = pd.read_excel(filepath)
                 df_raw = df_raw.dropna(subset=['time'])
                 df = df_raw.iloc[2:].copy()
                 df['time'] = pd.to_numeric(df['time'])
@@ -184,8 +200,7 @@ class BaseAnalyzer:
             filename = f'{self.ACCIDENT_TYPE.lower()}_results.csv'
         df = pd.DataFrame(self.scenarios_data)
         df.to_csv(filename, index=False, encoding='utf-8-sig')
-        print(f'✓ 저장: {filename}')
-        files.download(filename)
+        print(f'✓ 저장 완료: {Path(filename).resolve()}')
 
 print('✓ 셀 1 완료: BaseAnalyzer 로드됨')
 
@@ -291,7 +306,7 @@ analyzer = LOFWAnalyzer()
 analyzer.step1_load_mapping()
 analyzer.step2_upload_files()
 df_lofw = analyzer.show_results()
-display(df_lofw)
+print(df_lofw)
 analyzer.save_results('lofw_results.csv')
 
 # ============================================================
@@ -302,5 +317,5 @@ analyzer = SBLOCAAnalyzer()
 analyzer.step1_load_mapping()
 analyzer.step2_upload_files()
 df_sbloca = analyzer.show_results()
-display(df_sbloca)
+print(df_sbloca)
 analyzer.save_results('sbloca_results.csv')

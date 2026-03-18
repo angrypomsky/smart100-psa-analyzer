@@ -45,10 +45,9 @@ class BaseAnalyzer:
         print(f'📊 SMART100 {self.ACCIDENT_TYPE} Analyzer')
         print('=' * 70)
         print('\n사용 순서:')
-        print('  1. analyzer.step1_load_mapping()  → 변수 매핑 파일 선택')
-        print('  2. analyzer.step2_upload_files()  → 시나리오 파일들 선택')
-        print('  3. analyzer.show_results()        → 결과 확인')
-        print('  4. analyzer.save_results()        → CSV 저장')
+        print('  1. analyzer.step2_upload_files()  → 시나리오 파일들 선택')
+        print('  2. analyzer.show_results()        → 결과 확인')
+        print('  3. analyzer.save_results()        → CSV 저장')
         print('=' * 70)
 
     def step1_load_mapping(self):
@@ -64,9 +63,6 @@ class BaseAnalyzer:
         print('\n▶ 다음: analyzer.step2_upload_files()')
 
     def step2_upload_files(self):
-        if self.var_mapping_df is None:
-            print('❌ 먼저 step1_load_mapping()을 실행하세요!')
-            return
         print(f'\n{"="*70}')
         print(f'Step 2: {self.ACCIDENT_TYPE} 시나리오 파일 선택')
         print(f'{"="*70}')
@@ -515,7 +511,6 @@ if __name__ == '__main__':
 
     name, cls, result_file = ANALYZERS[choice]
     analyzer = cls()
-    analyzer.step1_load_mapping()
     analyzer.step2_upload_files()
     df = analyzer.show_results()
     if df is not None:

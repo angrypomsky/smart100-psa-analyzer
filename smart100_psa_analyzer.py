@@ -421,16 +421,26 @@ class SGTRAnalyzer(BaseAnalyzer):
             if len(df_after) == 0:
                 return 0
             # PRHRS HX 열출력: 엑셀 89~92번째 컬럼 (pandas iloc 88~91)
-            # 전체 평균 대신 후반부 30% 구간 평균 사용
-            # (과도 초기 고출력이 평균을 왜곡하는 문제 방지)
-            tail_n = max(1, int(len(df_after) * 0.3))
-            steady_heat = df_after.iloc[:, 88:92].tail(tail_n).mean()
-            count = int((steady_heat > 10000).sum())
-            # SGTR 보정: 파단 유로 HX(cntrlvar.307)가 항상 높은 값 유지
+            # 피크 기준 판정: HX가 한 번이라도 작동했으면 작동으로 간주
+            # (후반부 평균 사용 시 감쇠 구간에서 누락되는 문제 방지)
+            peak_heat = df_after.iloc[:, 88:92].max()
+            count = int((peak_heat > 10000).sum())
+            # SGTR 보정: 파단 유로 HX(cntrlvar.307)가 항상 높은 피크값 유지
             # → 실제 작동 계통 수에서 1 차감
             return max(0, count - 1)
         except Exception:
             return -1
+
+    def _detect_reactor_trip(self, df):
+        """RT 성공 여부 판단: 출력이 30% 이상 감소하면 Success"""
+        try:
+            p_start = float(df['rktpow'].iloc[0])
+            p_end   = float(df['rktpow'].iloc[-1])
+            if p_start > 0 and (p_start - p_end) / p_start > 0.3:
+                return 'Success'
+            return 'Fail'
+        except Exception:
+            return 'Success'
 
     def _analyze_single(self, filename, df):
         scenario_name     = Path(filename).stem
@@ -442,7 +452,7 @@ class SGTRAnalyzer(BaseAnalyzer):
         note              = 'EarlyTerm' if df['time'].max() < 1000 else ''
         return {
             'Scenario':          scenario_name,
-            'Reactor_Trip':      'Success',
+            'Reactor_Trip':      self._detect_reactor_trip(df),
             'RCP_Status':        rcp_status,
             'PRHRS_count':       prhrs_count,
             'ADS_BLEED_count':   'N/A',

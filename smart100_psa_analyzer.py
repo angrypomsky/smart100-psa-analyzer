@@ -341,7 +341,8 @@ class LSSBAnalyzer(BaseAnalyzer):
             # PRHRS HX 열출력: 엑셀 89~92번째 컬럼 (pandas iloc 88~91)
             tail_n = max(1, int(len(df_after) * 0.3))
             steady_heat = df_after.iloc[:, 88:92].tail(tail_n).mean()
-            return int((steady_heat > 10000).sum())
+            count = int((steady_heat > 8e5).sum())
+            return count
         except Exception:
             return -1
 

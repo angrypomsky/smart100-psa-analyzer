@@ -289,8 +289,9 @@ class ET_Generator:
         groups = {}
         for b in branches:
             groups.setdefault(b[h], []).append(b)
+        reverse_sort = (h == 'PRHRS_count')
         try:
-            keys = sorted(groups.keys(), key=float)
+            keys = sorted(groups.keys(), key=float, reverse=reverse_sort)
         except (TypeError, ValueError):
             keys = list(groups.keys())
 
@@ -335,7 +336,7 @@ class ET_Generator:
         ws.cell(r, 1, "헤딩별 분포").font = Font(bold=True, size=12); r += 1
         for h in headings:
             ws.cell(r, 1, f"[{COL_DISPLAY.get(h, h)}]").font = Font(bold=True); r += 1
-            for val, cnt in df[h].value_counts().sort_index().items():
+            for val, cnt in df[h].value_counts().sort_index(ascending=(h != 'PRHRS_count')).items():
                 label = f"{int(val)}계통:" if h == 'PRHRS_count' else f"{val}:"
                 ws.cell(r, 2, label)
                 ws.cell(r, 3, cnt)

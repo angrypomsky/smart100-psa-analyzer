@@ -129,32 +129,16 @@ class BaseAnalyzer:
         else:
             return 'Natural Circulation'
 
-    def _find_rt_for_pct(self, df):
-        """
-        PCT 계산용 RT 시점: 초기 출력 대비 90% 이상 감소한 첫 시점
-        데이터가 RT 이후부터 시작(GTRN/LSSB/SGTR)하면 time.min() 반환
-        """
-        try:
-            initial_power = float(df['rktpow'].iloc[0])
-            threshold     = initial_power * 0.1  # 90% 감소 = 초기의 10% 이하
-            trip_rows     = df[df['rktpow'] < threshold]
-            if len(trip_rows) > 0:
-                return float(trip_rows['time'].min())
-        except Exception:
-            pass
-        return float(df['time'].min())
-
     def _calculate_pct(self, df, rt_time):
         """
-        PCT 계산 - 출력 90% 감소 시점 이후 구간에서 3개 노드 중 최대값
+        PCT 계산 - RT 이후 구간에서 3개 노드 중 최대값
         httemp   = 120000803 (노드 8)
         httemp.1 = 120000903 (노드 9)
         httemp.2 = 120001003 (노드 10)
         """
-        pct_cols   = ['httemp', 'httemp.1', 'httemp.2']
-        rt_for_pct = self._find_rt_for_pct(df)
-        df_valid   = df[df['time'] >= rt_for_pct].copy()
-        df_valid   = df_valid[(df_valid[pct_cols] < 10000).all(axis=1)]
+        pct_cols = ['httemp', 'httemp.1', 'httemp.2']
+        df_valid = df[df['time'] >= rt_time].copy()
+        df_valid = df_valid[(df_valid[pct_cols] < 10000).all(axis=1)]
         if len(df_valid) == 0:
             return 0.0, 0.0
         df_valid['pct_row_max'] = df_valid[pct_cols].max(axis=1)

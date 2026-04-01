@@ -197,15 +197,35 @@ def process_one(et_path: Path, dash_path: Path, output_dir: Path) -> str:
     ws_dash = wb['Dashboard']
     ws_calc = wb['Calc']
 
+    # ── Data 시트 색상 매핑 추출 (템플릿 원본에서) ──────────────────
+    # 값 → fill 매핑: 열별로 추출 (None/빈 셀 제외)
+    col_fill_map: dict[int, dict[str, object]] = {}
+    for row in ws_data.iter_rows(min_row=2, max_row=ws_data.max_row):
+        for cell in row:
+            if cell.value is None:
+                continue
+            if cell.fill and cell.fill.fill_type not in (None, 'none'):
+                col = cell.column
+                key = str(cell.value).strip()
+                if col not in col_fill_map:
+                    col_fill_map[col] = {}
+                if key not in col_fill_map[col]:
+                    col_fill_map[col][key] = copy(cell.fill)
+
     # ── Data 시트 채우기 ─────────────────────────────────────────────
     for row in ws_data.iter_rows(min_row=2, max_row=ws_data.max_row):
         for cell in row:
             cell.value = None
+            cell.fill = openpyxl.styles.PatternFill(fill_type=None)
 
     for i, row_data in enumerate(et_rows_raw):
         r = i + 2
         for j, val in enumerate(row_data):
-            ws_data.cell(r, j + 1, val)
+            cell = ws_data.cell(r, j + 1, val)
+            col = j + 1
+            key = str(val).strip()
+            if col in col_fill_map and key in col_fill_map[col]:
+                cell.fill = copy(col_fill_map[col][key])
 
     for cell in ws_data[1]:
         if cell.value == 'LAST_ROW':
@@ -345,8 +365,8 @@ def main():
         help='Dashboard 템플릿 xlsx 경로 (필수)'
     )
     parser.add_argument(
-        '-o', '--output', default='.',
-        help='결과 저장 폴더 (기본값: 현재 폴더)'
+        '-o', '--output', default='dashboard_results',
+        help='결과 저장 폴더 (기본값: dashboard_results/)'
     )
     args = parser.parse_args()
 

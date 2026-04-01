@@ -141,7 +141,7 @@ class BaseAnalyzer:
     CD_THRESHOLD  = 1477  # NRC 규제 기준 PCT Core Damage 판정 (K)
 
     # PRHRS 검출 파라미터 기본값
-    PRHRS_FLOOR      = 1e4   # W
+    PRHRS_FLOOR      = 1e5   # W
     PRHRS_RATIO      = 0.1   # 10%
     PRHRS_WAIT       = 100   # s
     PRHRS_USE_PEAK   = False
@@ -536,14 +536,11 @@ class SGTRAnalyzer(BaseAnalyzer):
     """
     SGTR (Steam Generator Tube Rupture)
     - RT: rktpow 80% 감소 시점 (BaseAnalyzer 공통 로직)
-    - PRHRS: 피크값 기준, 파단 유로 HX 1개 차감 (CORRECTION=-1)
-             → 상대 비교 알고리즘에서 파단 HX가 max가 되고
-               나머지 작동 계통이 RATIO 기준을 충족하면 자연스럽게 분류됨
+    - PRHRS: 후반 30% 평균 (LSSB와 동일 방식), WAIT=100s
     - 조기 종료: Note='EarlyTerm'
     """
-    ACCIDENT_TYPE    = 'SGTR'
-    PRHRS_USE_PEAK   = True
-    PRHRS_CORRECTION = -1   # 파단 유로 HX 1개 차감
+    ACCIDENT_TYPE   = 'SGTR'
+    PRHRS_TAIL_FRAC = 0.3   # 후반 30% 평균 (LSSB와 동일)
 
     def _detect_reactor_trip(self, df):
         """rktpow가 초기값 대비 80% 이상 감소했으면 Success"""

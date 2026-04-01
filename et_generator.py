@@ -176,8 +176,8 @@ class ET_Generator:
     # ── 데이터 정규화 ─────────────────────────────────────────────────
     def _normalize(self, df):
         df = df.rename(columns=RENAME_MAP)
-        for c in ['SIT_Refill_time', 'PSIS_FEED_status', 'Reactor_Trip',
-                  'RCP_Status', 'Outcome']:
+        for c in ['SIT_Refill_time', 'PSIS_FEED_status', 'ADS_BLEED_count',
+                  'Reactor_Trip', 'RCP_Status', 'Outcome']:
             if c in df.columns:
                 df[c] = df[c].fillna('N/A')
         return df
@@ -336,8 +336,12 @@ class ET_Generator:
         ws.cell(r, 1, "헤딩별 분포").font = Font(bold=True, size=12); r += 1
         for h in headings:
             ws.cell(r, 1, f"[{COL_DISPLAY.get(h, h)}]").font = Font(bold=True); r += 1
-            for val, cnt in df[h].value_counts().sort_index(ascending=(h != 'PRHRS_count')).items():
-                label = f"{int(val)}계통:" if h == 'PRHRS_count' else f"{val}:"
+            try:
+                vc = df[h].value_counts().sort_index(ascending=(h != 'PRHRS_count'))
+            except TypeError:
+                vc = df[h].value_counts()
+            for val, cnt in vc.items():
+                label = f"{int(float(val))}계통:" if h == 'PRHRS_count' else f"{val}:"
                 ws.cell(r, 2, label)
                 ws.cell(r, 3, cnt)
                 ws.cell(r, 4, cnt/len(df)).number_format = '0.0%'; r += 1
@@ -354,8 +358,8 @@ def main():
         help='CSV 파일 또는 폴더 경로 (생략 시 현재 폴더의 모든 CSV)'
     )
     parser.add_argument(
-        '-o', '--output', default='.',
-        help='Excel 결과 저장 폴더 (기본값: 현재 폴더)'
+        '-o', '--output', default='et_results',
+        help='Excel 결과 저장 폴더 (기본값: et_results/)'
     )
     args = parser.parse_args()
 

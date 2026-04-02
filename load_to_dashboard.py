@@ -274,7 +274,7 @@ def process_one(et_path: Path, dash_path: Path, output_dir: Path) -> str:
     print(f"  Calc 시트 수식 완료 ({n}행)")
 
     # ── Dashboard 수식 범위 업데이트 ────────────────────────────────
-    old_n = 111
+    old_n = 110
     for row in ws_dash.iter_rows():
         for cell in row:
             if isinstance(cell.value, str) and cell.value.startswith('='):

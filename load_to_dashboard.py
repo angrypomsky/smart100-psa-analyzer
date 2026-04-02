@@ -115,6 +115,8 @@ def _psis_to_count(val):
 def _to_val(v):
     if v is None:
         return '-'
+    if isinstance(v, str) and v.strip().upper() in ('N/A', 'NA', ''):
+        return '-'
     try:
         import math
         if math.isnan(float(v)):

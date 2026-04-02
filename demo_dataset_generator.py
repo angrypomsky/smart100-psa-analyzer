@@ -100,11 +100,17 @@ class DemoDatasetGenerator:
     def __init__(self):
         pass
 
-    def generate(self, accident_type: str, n: int = 200, seed: int = 42) -> pd.DataFrame:
+    def generate(self, accident_type: str, n: int = 200, seed: int = 42,
+                 mode: str = 'montecarlo') -> pd.DataFrame:
         accident_type = accident_type.upper()
         if accident_type not in ACCIDENT_TYPES:
             raise ValueError(f"지원하지 않는 사고유형: {accident_type}. 가능: {ACCIDENT_TYPES}")
 
+        if mode == 'stratified':
+            return self._generate_stratified(accident_type, n, seed)
+        return self._generate_montecarlo(accident_type, n, seed)
+
+    def _generate_montecarlo(self, accident_type: str, n: int, seed: int) -> pd.DataFrame:
         rng = np.random.default_rng(seed)
         rows = []
 
@@ -139,6 +145,73 @@ class DemoDatasetGenerator:
         self._print_stats(accident_type, df)
         return df
 
+    def _generate_stratified(self, accident_type: str, n: int, seed: int) -> pd.DataFrame:
+        """ET 브랜치 경로별 균등 배분 (계층화 샘플링)"""
+        rng = np.random.default_rng(seed)
+
+        # ET 분기 경로 정의
+        # PRHRS≥2: ADS/PSIS 불필요 → 단일 경로
+        # PRHRS≤1: ADS(0,1,2) × PSIS(Success,Fail) 조합 (ADS=0→PSIS=Fail 고정)
+        branches = []
+        for prhrs in PRHRS_VALUES:
+            if prhrs >= 2:
+                branches.append((prhrs, 'N/A', 'N/A'))
+            else:
+                branches.append((prhrs, 0, 'Fail'))       # ADS=0 → PSIS 강제 Fail
+                branches.append((prhrs, 1, 'Success'))
+                branches.append((prhrs, 1, 'Fail'))
+                branches.append((prhrs, 2, 'Success'))
+                branches.append((prhrs, 2, 'Fail'))
+
+        n_branches = len(branches)
+        base_per = n // n_branches
+        remainder = n % n_branches
+
+        # 나머지는 앞 브랜치부터 1개씩 추가
+        counts = [base_per + (1 if i < remainder else 0) for i in range(n_branches)]
+
+        rows = []
+        idx = 0
+        for branch, cnt in zip(branches, counts):
+            prhrs_val, ads_val, psis_val = branch
+            for _ in range(cnt):
+                rt      = self._sample_rt(accident_type, rng)
+                rcp     = self._sample_rcp(rt, rng)
+                sit     = self._sample_sit(psis_val, rng)
+                rt_time = float(rng.uniform(*RT_TIME_RANGE[accident_type]))
+                pct     = self._sample_pct(prhrs_val, ads_val, psis_val, rng)
+                pct_t   = rt_time + float(rng.uniform(*PCT_TIME_OFFSET))
+                outcome = 'CD' if pct >= 1477.0 else 'OK'
+                note    = self._sample_note(accident_type, rng)
+                idx += 1
+
+                rows.append({
+                    'Scenario':         f'{accident_type}_{idx:03d}',
+                    'Reactor_Trip':     rt,
+                    'RCP_Status':       rcp,
+                    'PRHRS_count':      prhrs_val,
+                    'ADS_BLEED_count':  ads_val,
+                    'PSIS_FEED_status': psis_val,
+                    'SIT_Refill_time':  sit,
+                    'PCT_max':          round(pct, 1),
+                    'PCT_time':         round(pct_t, 1),
+                    'Outcome':          outcome,
+                    'Note':             note,
+                })
+
+        # 시나리오 셔플 (브랜치별로 뭉치지 않도록)
+        rng.shuffle(rows)
+        for i, row in enumerate(rows):
+            row['Scenario'] = f'{accident_type}_{i+1:03d}'
+
+        df = pd.DataFrame(rows)
+        print(f"\n[계층화 샘플링] {n_branches}개 브랜치 × ~{base_per}건/브랜치")
+        for branch, cnt in zip(branches, counts):
+            p, a, ps = branch
+            print(f"  PRHRS={p}, ADS={a}, PSIS={ps}: {cnt}건")
+        self._print_stats(accident_type, df)
+        return df
+
     # ── 샘플링 메서드 ───────────────────────────────────────────────────
 
     def _sample_rt(self, accident_type: str, rng) -> str:
@@ -160,14 +233,6 @@ class DemoDatasetGenerator:
             return 'N/A'
         probs = ADS_GIVEN_PRHRS[prhrs]
         return int(rng.choice(ADS_VALUES, p=probs))
-
-    def _sample_psis(self, ads) -> str:
-        """ADS가 N/A이면 N/A, 아니면 ADS 작동 수 조건부"""
-        if ads == 'N/A':
-            return 'N/A'
-        p_success = PSIS_SUCCESS_GIVEN_ADS[ads]
-        # rng 없이 결정론적 분기 가능하지만 호출부에서 rng 전달
-        return p_success  # 임시 — 아래에서 오버라이드
 
     def _sample_psis(self, ads, rng) -> str:
         if ads == 'N/A':
@@ -260,6 +325,8 @@ def main():
     parser.add_argument('--n',      type=int,  default=200, help='시나리오 수 (기본: 200)')
     parser.add_argument('--seed',   type=int,  default=42,  help='랜덤 시드 (기본: 42)')
     parser.add_argument('--output', type=str,  default='demo_data', help='저장 폴더 (기본: demo_data/)')
+    parser.add_argument('--mode',   choices=['montecarlo', 'stratified'], default='stratified',
+                        help='샘플링 방식 (기본: stratified)')
     parser.add_argument('--fmt',    choices=['csv', 'excel', 'both'], default='csv',
                         help='저장 형식 (기본: csv)')
     args = parser.parse_args()
@@ -269,7 +336,7 @@ def main():
 
     for i, acc in enumerate(targets):
         # 사고유형마다 seed 오프셋 적용 → 각자 다른 데이터
-        df = gen.generate(acc, n=args.n, seed=args.seed + i)
+        df = gen.generate(acc, n=args.n, seed=args.seed + i, mode=args.mode)
         gen.save(df, acc, output_dir=args.output, fmt=args.fmt)
 
     print(f"\n완료: {len(targets)}개 사고유형, 저장 위치: {args.output}/")

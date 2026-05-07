@@ -122,7 +122,7 @@ class DemoDatasetGenerator:
             psis    = self._sample_psis(ads, rng)
             sit     = self._sample_sit(psis, rng)
             rt_time = float(rng.uniform(*RT_TIME_RANGE[accident_type]))
-            pct     = self._sample_pct(prhrs, ads, psis, rng)
+            pct     = self._sample_pct(prhrs, ads, psis, rt, rng)
             pct_t   = rt_time + float(rng.uniform(*PCT_TIME_OFFSET))
             outcome = 'CD' if pct >= 1477.0 else 'OK'
             note    = self._sample_note(accident_type, rng)
@@ -179,7 +179,7 @@ class DemoDatasetGenerator:
                 rcp     = self._sample_rcp(rt, rng)
                 sit     = self._sample_sit(psis_val, rng)
                 rt_time = float(rng.uniform(*RT_TIME_RANGE[accident_type]))
-                pct     = self._sample_pct(prhrs_val, ads_val, psis_val, rng)
+                pct     = self._sample_pct(prhrs_val, ads_val, psis_val, rt, rng)
                 pct_t   = rt_time + float(rng.uniform(*PCT_TIME_OFFSET))
                 outcome = 'CD' if pct >= 1477.0 else 'OK'
                 note    = self._sample_note(accident_type, rng)
@@ -246,7 +246,20 @@ class DemoDatasetGenerator:
             return 'N/A'
         return round(float(rng.uniform(*SIT_RANGE)), 1)
 
-    def _sample_pct(self, prhrs: int, ads, psis: str, rng) -> float:
+    def _sample_pct(self, prhrs: int, ads, psis: str, rt: str, rng) -> float:
+        """
+        PCT 샘플링 (공학 자문 반영, 2026-04-23 개정)
+
+        [수정 1] ATWS (RT=Fail) 보정
+          - 반응도 미정지로 출력 지속 → PCT 상향
+          - 완화계통 상태별 차등 (PRHRS 가능하면 완화 가능, 불가능하면 CD 거의 확정)
+          - 목표: 전체 ATWS 에 대해 CCDP ~0.7~0.8 재현 (문헌 및 실무 감각)
+
+        [수정 2] 완전실패 (PRHRS=0 & ADS=0 & PSIS=Fail) 하한
+          - 열제거원·재고 보충 모두 상실 → SIT 단독으로는 붕괴열 제거 불가
+          - PCT 를 1550~1800K 로 강제 → CD 확률 ≥ 98%
+          - 근거: 피복재 건전성 한계 1477K 를 항상 초과하도록 floor 적용
+        """
         prhrs_ok = prhrs >= 2
         ads_ok   = isinstance(ads, int) and ads >= 1
         psis_ok  = psis == 'Success'
@@ -254,7 +267,19 @@ class DemoDatasetGenerator:
         key = (prhrs_ok, ads_ok, psis_ok)
         mean, std = PCT_PARAMS[key]
         pct = rng.normal(mean, std)
-        return float(np.clip(pct, 800, 1900))
+
+        # [수정 1] ATWS 보정
+        if rt == 'Fail':
+            if prhrs_ok:
+                pct += rng.uniform(400, 550)   # PRHRS 로 완화 가능, 온도 상승 중등
+            else:
+                pct += rng.uniform(300, 500)   # 이미 고온 baseline, 추가 상승
+
+        # [수정 2] 완전실패 하한
+        if (not prhrs_ok) and (not ads_ok) and (not psis_ok):
+            pct = max(pct, float(rng.uniform(1550, 1800)))
+
+        return float(np.clip(pct, 800, 2200))
 
     def _sample_note(self, accident_type: str, rng) -> str:
         if accident_type in ('LSSB', 'SGTR'):

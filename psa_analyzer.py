@@ -394,10 +394,10 @@ class LOFWAnalyzer(BaseAnalyzer):
     """
     LOFW (Loss of Feedwater)
     - RT: rktpow 80% 감소 시점 (BaseAnalyzer 공통 로직)
-    - PRHRS: 전체 평균, WAIT=50s
+    - PRHRS: 전체 평균, WAIT=100s
     """
     ACCIDENT_TYPE = 'LOFW'
-    PRHRS_WAIT    = 50
+    PRHRS_WAIT    = 100
 
 
 # ============================================================

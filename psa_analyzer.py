@@ -472,11 +472,13 @@ class LSSBAnalyzer(BaseAnalyzer):
     """
     LSSB (Large Secondary Side Break)
     - RT: rktpow 80% 감소 시점 (데이터가 RT 이후 시작 시 time.min() fallback)
-    - PRHRS: 후반 30% 평균 (초기 대형 과도현상 제외), WAIT=100s
+    - PRHRS: RT 이후 전체 평균, FLOOR=1.6e6, RATIO=0.8 (80%)
+      초기 과도 스파이크 영향을 floor+ratio 조합으로 처리
     - 조기 종료: Note='EarlyTerm'
     """
     ACCIDENT_TYPE   = 'LSSB'
-    PRHRS_TAIL_FRAC = 0.3   # 후반 30% 평균
+    PRHRS_FLOOR     = 1.6e6  # W — 전 계통 실패 시 Q_max < 1.6e6으로 확인
+    PRHRS_RATIO     = 0.8    # 80% — 실패 계통은 최대값 대비 3~5% 수준으로 확인
 
     def _analyze_single(self, filename, df):
         scenario_name     = Path(filename).stem
@@ -536,7 +538,7 @@ class SGTRAnalyzer(BaseAnalyzer):
     """
     SGTR (Steam Generator Tube Rupture)
     - RT: rktpow 80% 감소 시점 (BaseAnalyzer 공통 로직)
-    - PRHRS: 후반 30% 평균 (LSSB와 동일 방식), WAIT=100s
+    - PRHRS: 후반 30% 평균, WAIT=100s (과도 후반부 안정화 거동 반영)
     - 조기 종료: Note='EarlyTerm'
     """
     ACCIDENT_TYPE   = 'SGTR'

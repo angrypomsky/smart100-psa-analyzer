@@ -272,9 +272,14 @@ class BaseAnalyzer:
         데이터가 RT 이후부터 시작(GTRN/LSSB/SGTR)하면 time.min() 반환
         """
         try:
-            initial_power = float(df['rktpow'].iloc[0])
+            valid_pow     = df['rktpow'][df['rktpow'] > 0]
+            if len(valid_pow) == 0:
+                return float(df['time'].min())
+            initial_power = float(valid_pow.iloc[0])
+            start_idx     = valid_pow.index[0]
             threshold     = initial_power * 0.1  # 90% 감소 = 초기의 10% 이하
-            trip_rows     = df[df['rktpow'] < threshold]
+            df_after      = df.loc[start_idx:]
+            trip_rows     = df_after[df_after['rktpow'] < threshold]
             if len(trip_rows) > 0:
                 return float(trip_rows['time'].min())
         except Exception:
@@ -346,9 +351,14 @@ class BaseAnalyzer:
         데이터가 RT 이후부터 시작하면 time.min() 반환
         """
         try:
-            initial_power = float(df['rktpow'].iloc[0])
+            valid_pow     = df['rktpow'][df['rktpow'] > 0]
+            if len(valid_pow) == 0:
+                return float(df['time'].min())
+            initial_power = float(valid_pow.iloc[0])
+            start_idx     = valid_pow.index[0]
             threshold     = initial_power * 0.2  # 80% 감소 = 초기의 20% 이하
-            trip_rows     = df[df['rktpow'] < threshold]
+            df_after      = df.loc[start_idx:]
+            trip_rows     = df_after[df_after['rktpow'] < threshold]
             if len(trip_rows) > 0:
                 return float(trip_rows['time'].min())
         except Exception:

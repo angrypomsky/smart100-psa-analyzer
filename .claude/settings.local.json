@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/user/OneDrive/메인포메틱스/후처리/data/**)"
+    ]
+  }
+}

@@ -1,0 +1,363 @@
+{
+  "timestamp": "2026-06-04T00:55:39.565Z",
+  "reason": "compaction",
+  "status": {
+    "version": "3.0",
+    "lastUpdated": "2026-06-02T08:17:55.336Z",
+    "activeFeatures": [
+      "smart100-psa-analyzer",
+      "Temp"
+    ],
+    "primaryFeature": "smart100-psa-analyzer",
+    "features": {
+      "smart100-psa-analyzer": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-04-08T08:25:39.477Z",
+          "lastUpdated": "2026-06-02T08:17:55.336Z"
+        },
+        "lastFile": "C:\\Users\\user\\smart100-psa-analyzer\\psa_analyzer.py"
+      },
+      "Temp": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-06-01T04:43:16.545Z",
+          "lastUpdated": "2026-06-02T08:15:46.233Z"
+        },
+        "lastFile": "C:\\Users\\user\\AppData\\Local\\Temp\\check_pct.py"
+      }
+    },
+    "pipeline": {
+      "currentPhase": 1,
+      "level": "Dynamic",
+      "phaseHistory": []
+    },
+    "session": {
+      "startedAt": "2026-04-08T07:18:54.404Z",
+      "onboardingCompleted": false,
+      "lastActivity": "2026-06-02T08:17:55.336Z"
+    },
+    "history": [
+      {
+        "timestamp": "2026-04-08T08:25:39.477Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-08T08:27:23.316Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-08T08:31:42.072Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-08T08:31:59.256Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-08T08:32:15.357Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-08T08:32:22.519Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-14T04:22:10.098Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-14T04:22:45.452Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-14T04:22:51.264Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:02.800Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:10.822Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:13.238Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:20.116Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:27.194Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:46.815Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:34:55.223Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:35:03.667Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T03:35:13.443Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T05:14:31.025Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T05:14:36.022Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-22T10:39:43.348Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-23T07:36:39.668Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-23T07:36:47.314Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-23T07:36:51.769Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-04-23T07:37:34.581Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-05-07T05:50:47.285Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-05-07T05:51:04.251Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T00:39:28.465Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:39:03.106Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:40:30.118Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:43:16.545Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:44:47.991Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:48:00.372Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:48:16.283Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:50:19.639Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:57:46.682Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T04:59:40.682Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T05:35:01.797Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T05:36:02.421Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T05:39:29.177Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T05:40:07.456Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-01T05:52:05.144Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T01:25:45.050Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T01:26:06.107Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T08:15:46.233Z",
+        "feature": "Temp",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T08:16:42.876Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T08:16:49.958Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T08:17:46.468Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-06-02T08:17:55.336Z",
+        "feature": "smart100-psa-analyzer",
+        "phase": "do",
+        "action": "updated"
+      }
+    ],
+    "stateMachine": {
+      "defaultWorkflow": "default",
+      "activeWorkflows": {},
+      "totalTransitions": 0
+    },
+    "automation": {
+      "globalLevel": 2,
+      "trustScore": 40,
+      "pendingApprovals": 0,
+      "lastGateResult": null
+    },
+    "team": {
+      "enabled": true,
+      "stateFile": ".bkit/runtime/agent-state.json",
+      "eventsFile": ".bkit/runtime/agent-events.jsonl"
+    }
+  }
+}

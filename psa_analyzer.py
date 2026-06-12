@@ -134,6 +134,9 @@ class BaseAnalyzer:
       PRHRS_WAIT       RT 이후 판정 대기 시간 (s)
       PRHRS_USE_PEAK   True: 피크값 기준, False: 평균값 기준
       PRHRS_TAIL_FRAC  None: 전체 평균, float: 후반 N% 평균 (예: 0.3 = 후반 30%)
+      PRHRS_WINDOW     None: 전체 구간, float: RT+WAIT 이후 N초 구간만 사용
+                       (SLOCA: 붕괴열 감소로 PRHRS 출력이 시간에 따라 자연 감소하므로
+                        4계통 작동 구간(drop ~3.1h)을 포함하는 초기 창으로 제한)
       PRHRS_CORRECTION 계통수 보정값 (SGTR: -1, 나머지: 0)
     """
 
@@ -141,11 +144,12 @@ class BaseAnalyzer:
     CD_THRESHOLD  = 1477  # NRC 규제 기준 PCT Core Damage 판정 (K)
 
     # PRHRS 검출 파라미터 기본값
-    PRHRS_FLOOR      = 1e5   # W
+    PRHRS_FLOOR      = 1e6   # W
     PRHRS_RATIO      = 0.1   # 10%
     PRHRS_WAIT       = 100   # s
     PRHRS_USE_PEAK   = False
     PRHRS_TAIL_FRAC  = None
+    PRHRS_WINDOW     = None  # s — None: 전체 구간, float: RT+WAIT 이후 N초 구간만 사용
     PRHRS_CORRECTION = 0
 
     def __init__(self):
@@ -325,6 +329,8 @@ class BaseAnalyzer:
             return -1
 
         df_after = df[df['time'] > rt_time + self.PRHRS_WAIT]
+        if self.PRHRS_WINDOW is not None:
+            df_after = df_after[df_after['time'] <= rt_time + self.PRHRS_WAIT + self.PRHRS_WINDOW]
         if len(df_after) == 0:
             return 0
 
@@ -418,9 +424,14 @@ class SBLOCAAnalyzer(BaseAnalyzer):
     """
     SBLOCA (Small Break LOCA)
     - RT: rktpow 80% 감소 시점 (BaseAnalyzer 공통 로직)
-    - PRHRS: 전체 평균, WAIT=100s
+    - PRHRS: RT+WAIT 이후 3h(10800s) 창 평균, FLOOR=1e6 W
+      RT 이후 PRHRS는 수 MW로 작동하다가 붕괴열 감소에 따라 자연 감소.
+      4계통 작동 케이스의 1e6 W drop 시점: RT+~11,350s(SLOCA2) ~ RT+~11,600s(SLOCA1).
+      10800s 창은 4계통 작동 구간 내에 포함되므로 보수적으로 계통수 판정 가능.
+      0계통 케이스(Q_peak ~2 kW)는 FLOOR로 완전 분리.
     """
-    ACCIDENT_TYPE = 'SBLOCA'
+    ACCIDENT_TYPE  = 'SBLOCA'
+    PRHRS_WINDOW   = 10800   # s — 3h: 4계통 drop 시점(RT+~11,350s) 이전까지
 
     def _analyze_single(self, filename, df):
         result = super()._analyze_single(filename, df)
@@ -482,13 +493,15 @@ class LSSBAnalyzer(BaseAnalyzer):
     """
     LSSB (Large Secondary Side Break)
     - RT: rktpow 80% 감소 시점 (데이터가 RT 이후 시작 시 time.min() fallback)
-    - PRHRS: RT 이후 전체 평균, FLOOR=1.6e6, RATIO=0.8 (80%)
-      초기 과도 스파이크 영향을 floor+ratio 조합으로 처리
+    - PRHRS: RT 이후 전체 평균, FLOOR=1e6 W, RATIO=0.8 (80%)
+      0계통 Q_all ≤270 kW, 1계통 Q_all ≥1.6 MW — FLOOR=1e6으로 완전 분리.
+      초기 과도 스파이크 영향은 RATIO=80% 조합으로 처리.
     - 조기 종료: Note='EarlyTerm'
     """
     ACCIDENT_TYPE   = 'LSSB'
-    PRHRS_FLOOR     = 1.6e6  # W — 전 계통 실패 시 Q_max < 1.6e6으로 확인
-    PRHRS_RATIO     = 0.8    # 80% — 실패 계통은 최대값 대비 3~5% 수준으로 확인
+    PRHRS_FLOOR     = 1e6    # W — 0계통(Q_all ≤270 kW) vs 1계통(Q_all ≥1.6 MW) 갭 기반
+    # RATIO=0.1(10%)과 RATIO=0.8(80%) 결과 동일 확인: 작동/비작동 계통 비율이 3.5% 이하로
+    # 극단적으로 분리되므로 RATIO값에 무관. 타 사고유형과 통일하여 0.1 사용.
 
     def _analyze_single(self, filename, df):
         scenario_name     = Path(filename).stem
@@ -548,11 +561,15 @@ class SGTRAnalyzer(BaseAnalyzer):
     """
     SGTR (Steam Generator Tube Rupture)
     - RT: rktpow 80% 감소 시점 (BaseAnalyzer 공통 로직)
-    - PRHRS: 후반 30% 평균, WAIT=100s (과도 후반부 안정화 거동 반영)
+    - PRHRS: 전체 평균, FLOOR=1e6 W
+      실제 데이터 확인 결과 작동 계통(Q_all ≥ 1.56 MW)과
+      미작동 계통(Q_all ≤ 349 kW) 사이에 명확한 갭 존재.
+      후반 30%는 PRHRS 출력 감소 구간을 포함하여 오분류 발생하므로 전체 평균 사용.
     - 조기 종료: Note='EarlyTerm'
     """
     ACCIDENT_TYPE   = 'SGTR'
-    PRHRS_TAIL_FRAC = 0.3   # 후반 30% 평균 (LSSB와 동일)
+    PRHRS_FLOOR     = 1e6    # W — 작동(≥1.56 MW) vs 미작동(≤349 kW) 갭 기반
+    PRHRS_TAIL_FRAC = None   # 전체 평균 (후반 30%는 감소 구간 포함으로 오분류)
 
     def _detect_reactor_trip(self, df):
         """rktpow가 초기값 대비 80% 이상 감소했으면 Success"""

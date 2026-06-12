@@ -37,7 +37,11 @@ RCP_GIVEN_RT = {
 }
 
 # PRHRS 계통수 조건부 확률 (RT + RCP | 순서: 4,3,2,1,0)
-PRHRS_VALUES = [4, 3, 2, 1, 0]
+# LSSB/SGTR는 2차측 파단으로 해당 루프 PRHRS 1대 초기 고장 → 최대 3대
+PRHRS_VALUES = [4, 3, 2, 1, 0]           # LOFW, SBLOCA, GTRN
+PRHRS_VALUES_2NDBREAK = [3, 2, 1, 0]     # LSSB, SGTR (최대 3대)
+ACCIDENTS_2NDBREAK = {'LSSB', 'SGTR'}
+
 PRHRS_GIVEN_RT_RCP = {
     ('Success', 'Running'):             [0.60, 0.25, 0.10, 0.04, 0.01],
     ('Success', 'Coast-down'):          [0.40, 0.35, 0.15, 0.08, 0.02],
@@ -45,6 +49,16 @@ PRHRS_GIVEN_RT_RCP = {
     ('Fail',    'Running'):             [0.10, 0.20, 0.30, 0.25, 0.15],
     ('Fail',    'Coast-down'):          [0.10, 0.20, 0.30, 0.25, 0.15],
     ('Fail',    'Natural Circulation'): [0.10, 0.20, 0.30, 0.25, 0.15],
+}
+
+# LSSB/SGTR 전용: 4→3 확률 병합 (순서: 3,2,1,0)
+PRHRS_GIVEN_RT_RCP_2NDBREAK = {
+    ('Success', 'Running'):             [0.85, 0.10, 0.04, 0.01],
+    ('Success', 'Coast-down'):          [0.75, 0.15, 0.08, 0.02],
+    ('Success', 'Natural Circulation'): [0.60, 0.25, 0.10, 0.05],
+    ('Fail',    'Running'):             [0.30, 0.30, 0.25, 0.15],
+    ('Fail',    'Coast-down'):          [0.30, 0.30, 0.25, 0.15],
+    ('Fail',    'Natural Circulation'): [0.30, 0.30, 0.25, 0.15],
 }
 
 # ADS 작동 수 조건부 확률 (PRHRS ≤ 1일 때만 | 순서: 0,1,2)
@@ -117,7 +131,7 @@ class DemoDatasetGenerator:
         for i in range(n):
             rt      = self._sample_rt(accident_type, rng)
             rcp     = self._sample_rcp(rt, rng)
-            prhrs   = self._sample_prhrs(rt, rcp, rng)
+            prhrs   = self._sample_prhrs(rt, rcp, rng, accident_type)
             ads     = self._sample_ads(prhrs, rng)
             psis    = self._sample_psis(ads, rng)
             sit     = self._sample_sit(psis, rng)
@@ -152,8 +166,9 @@ class DemoDatasetGenerator:
         # ET 분기 경로 정의
         # PRHRS≥2: ADS/PSIS 불필요 → 단일 경로
         # PRHRS≤1: ADS(0,1,2) × PSIS(Success,Fail) 조합 (ADS=0→PSIS=Fail 고정)
+        prhrs_range = PRHRS_VALUES_2NDBREAK if accident_type in ACCIDENTS_2NDBREAK else PRHRS_VALUES
         branches = []
-        for prhrs in PRHRS_VALUES:
+        for prhrs in prhrs_range:
             if prhrs >= 2:
                 branches.append((prhrs, 'N/A', 'N/A'))
             else:
@@ -222,10 +237,11 @@ class DemoDatasetGenerator:
         probs = RCP_GIVEN_RT[rt]
         return str(rng.choice(RCP_STATES, p=probs))
 
-    def _sample_prhrs(self, rt: str, rcp: str, rng) -> int:
+    def _sample_prhrs(self, rt: str, rcp: str, rng, accident_type: str = '') -> int:
         key = (rt, rcp)
-        probs = PRHRS_GIVEN_RT_RCP[key]
-        return int(rng.choice(PRHRS_VALUES, p=probs))
+        if accident_type in ACCIDENTS_2NDBREAK:
+            return int(rng.choice(PRHRS_VALUES_2NDBREAK, p=PRHRS_GIVEN_RT_RCP_2NDBREAK[key]))
+        return int(rng.choice(PRHRS_VALUES, p=PRHRS_GIVEN_RT_RCP[key]))
 
     def _sample_ads(self, prhrs: int, rng):
         """PRHRS ≥ 2이면 N/A, 이하이면 조건부 샘플링"""
